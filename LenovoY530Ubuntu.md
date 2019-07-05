@@ -29,8 +29,11 @@ Nếu máy bị treo thì có thể restart bằng Magic SysRq như sau:
 2. Ghi file ISO ra USB bằng Rufus (DD mode) hoặc Etcher.
 3. Khởi động lại máy, bấm F2 liên tục để vào BIOS Setting. Vào tab Security và disable Secure Boot, sau đó bấm F10 và chọn Yes để lưu thiết lập.
 4. Khởi động lại máy, bấm F12 liên tục để mở Boot menu. Chọn USB chứa bộ cài.
-5. Bấm phím E để nhập boot option. Tìm dòng có chữ `quiet splash`, thêm `nouveau.modeset=0` và bấm F10 -> Disable nouveau driver khi boot để tránh máy bị treo sau khi login. **NOTE:** Với Pop!_OS do đã blacklist nouveau driver nên không cần.
-6. Để bật Wifi, chạy lệnh `sudo rmmod ideapad_laptop`.
+5. Bấm phím E để nhập boot option. Tìm dòng có chữ `quiet splash`, thêm `nouveau.modeset=0` và bấm F10 -> Disable nouveau driver khi boot để tránh máy bị treo sau khi login. **Lưu ý:** Với Pop!_OS do đã blacklist nouveau driver nên không cần.
+6. Để bật Wifi, chạy lệnh:
+```sh
+sudo rmmod ideapad_laptop
+```
 7. Cài đặt Pop!_OS hoặc Ubuntu theo mode UEFI.
 8. Khi khởi động lại và ở GRUB menu, làm tương tự bước 4 để boot vào OS.
 9. Sau khi boot vào, chạy lần lượt các lệnh sau để update OS và các package lên mới nhất:
@@ -42,7 +45,7 @@ sudo apt dist-upgrade
 
 ### 2.3. Cài NVIDIA driver
 Phần này áp dụng với Ubuntu, còn Pop!_OS thì không cần.
-1. Mở Software & Updates
+1. Mở Software & Updates.
 2. Vào tab Additional Drivers, chọn cài nvidia-driver-418 và bấm Apply Changes.
 3. Khởi động lại máy, kiểm tra driver đã nhận bằng cách chạy lệnh `prime-select query`, nếu thấy output là `nvidia` thì là OK.
 4. Để chọn GPU thì có thể dùng 1 trong 2 cách sau:
@@ -52,7 +55,7 @@ Phần này áp dụng với Ubuntu, còn Pop!_OS thì không cần.
 
 ### 2.4. Xử lý vấn đề wifi
 #### 2.4.1. Wifi không hoạt động
-Ta cần phải blacklist module `ideapad_laptop` do nó gây conflict với Wifi. Cách làm như sau:
+Để wifi hoạt động thì phải blacklist module `ideapad_laptop` do nó gây conflict với wifi. Cách làm như sau:
 1. Chạy lệnh `sudo gedit /etc/modprobe.d/blacklist.conf`.
 2. Bổ sung thêm dòng sau vào cuối file.
 ```sh
@@ -65,7 +68,7 @@ sudo update-initramfs -u
 ```
 4. Khởi động lại và kiểm tra Wifi đã bật.
 
-Lưu ý: Việc disable module này sẽ các hotkey liệt kê ở phần **2.1** không hoạt động. Việc upgrade kernel lên version 4.20 có thể sẽ khắc phục được lỗi này.
+**Lưu ý:** Việc disable module này sẽ khiến các hotkey liệt kê ở phần **2.1** không hoạt động. Việc upgrade kernel lên version 4.20 có thể sẽ khắc phục được lỗi này.
 
 #### 2.4.2. Với card Realtek RTL8822BE
 Chạy các lệnh sau để enable wifi RTL8822BE:
@@ -138,6 +141,7 @@ Mặc định khi khởi động thì brightness set ở giá trị 50%. Để s
 cat /sys/class/backlight/intel_backlight/brightness
 ```
 Ví dụ output sẽ là `120000` với brightness 100%.
+
 3. Tạo file `/etc/rc.local` với lệnh:
 ```sh
 sudo gedit /etc/rc.local
