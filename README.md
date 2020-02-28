@@ -1,2 +1,2 @@
-# Mục lục
-[Hướng dẫn cài đặt Ubuntu 18.04 trên Lenovo Legion Y530](./LenovoY530Ubuntu.md)
+# linux-guides
+Tổng hợp các hướng dẫn, tip, trick liên quan đến Linux (chủ yếu là cho Ubuntu).

@@ -34,7 +34,6 @@ plugins=(
   command-not-found
   debian
   extract
-  npm
 )
 ```
 
@@ -98,3 +97,42 @@ eval $(thefuck --alias)
 ```
 
 4. Mở lại Terminal.
+
+5. Cách sử dụng: Enter `fuck` hoặc bấm ESC 2 lần nếu command trước đó fail (VD: thiếu `sudo`).
+
+### ZSH NVM
+Repo: https://github.com/lukechilds/zsh-nvm
+
+Cài đặt:
+1. Gỡ bỏ `nvm` nếu đã cài: https://github.com/nvm-sh/nvm#uninstalling--removal
+
+2. Clone repo vào `~/.oh-my-zsh`:
+```sh
+git clone https://github.com/lukechilds/zsh-nvm ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-nvm
+```
+
+3. Thêm plugin vào `~/.zshrc`:
+```
+plugins=( [plugins...] zsh-nvm)
+```
+
+4. Mở lại Terminal.
+
+### ZSH Better NPM Completion
+Repo: https://github.com/lukechilds/zsh-better-npm-completion
+
+Cài đặt:
+
+1. Clone repo vào `~/.oh-my-zsh`:
+```sh
+git clone https://github.com/lukechilds/zsh-better-npm-completion ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-better-npm-completion
+```
+
+2. Thêm plugin vào `~/.zshrc`:
+```
+plugins=( [plugins...] zsh-better-npm-completion)
+```
+
+Nếu trong danh sách plugin có `npm` thì xoá bỏ nó trước khi thêm vào.
+
+3. Mở lại Terminal.
