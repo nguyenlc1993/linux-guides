@@ -535,6 +535,12 @@ The parameters `MemoryHigh` and `MemoryMax` protect the other services.
 If `derper` uses too much memory, systemd stops only `derper`.
 The programs `tailscaled` and `sshd` continue to operate.
 
+NOTE: `AdGuardHome.md` gives a different rule for the DNS server: use
+`MemoryHigh`, but do not use `MemoryMax`. The two rules are not contrary. If
+`derper` stops, the clients use a different relay. If the DNS server stops,
+the name resolution stops on all the devices of the tailnet. Use `MemoryMax`
+only for a service that can stop without an effect on the other devices.
+
 ### 9.3. Start the service
 
 ```bash
