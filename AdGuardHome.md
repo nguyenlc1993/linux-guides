@@ -641,8 +641,18 @@ filtering:
     google: true
     pixabay: true
     yandex: true
-    youtube: true
+    youtube: false
 ```
+
+WARNING: Keep `youtube` as `false`. The value `true` sends `www.youtube.com`
+and `m.youtube.com` to `restrictmoderate.youtube.com`, which is the Restricted
+Mode of YouTube. That mode makes many live streams unavailable. The player
+then shows `Video not available` with the error code 151. The cause is
+difficult to find, because the usual videos continue to operate and no name is
+blocked.
+
+Measured on this server: with `youtube: true` a live stream gave the error 151.
+With SafeSearch disabled, the same stream operated correctly.
 
 The rules are in the program, at
 `internal/filtering/safesearch/rules/`. In the version 0.107.79, the file
@@ -668,7 +678,8 @@ Add these rewrites in **Filters**, then **DNS rewrites**.
 | --- | --- |
 | `google.com` | `forcesafesearch.google.com` |
 | `google.com.vn` | `forcesafesearch.google.com` |
-| `youtube.com` | `restrictmoderate.youtube.com` |
+
+Do not add a rewrite for `youtube.com`. Refer to the warning above.
 
 CAUTION: If you write a rewrite in the file `AdGuardHome.yaml`, add
 `enabled: true`. The program makes the value `false` if the value is not
@@ -686,7 +697,7 @@ Test the rewrites. The sub-domains of Google must not change.
 
 ```bash
 dig +short @100.x.y.z google.com          # forcesafesearch.google.com
-dig +short @100.x.y.z youtube.com         # restrictmoderate.youtube.com
+dig +short @100.x.y.z youtube.com         # a usual address, NOT restrictmoderate
 dig +short @100.x.y.z mail.google.com     # a usual address
 dig +short @100.x.y.z googleapis.com      # a usual address
 ```
