@@ -404,26 +404,32 @@ This set gives good coverage for English and Vietnamese web sites.
 
 | List | Rules | Function |
 | --- | --- | --- |
-| HaGeZi's Threat Intelligence Feeds - Medium | 321 100 | Malware, phishing and command-and-control |
-| HaGeZi's Pro++ Blocklist | 250 500 | General advertisements, trackers and telemetry |
-| AdGuard DNS filter | 180 000 | General advertisements and trackers |
-| HaGeZi NSFW Blocklist | 125 600 | Adult content |
-| Phishing URL Blocklist | 37 700 | Phishing |
+| HaGeZi's Threat Intelligence Feeds - Medium | 344 200 | Malware, phishing and command-and-control |
+| HaGeZi's Pro++ Blocklist | 248 800 | General advertisements, trackers and telemetry |
+| AdGuard DNS filter | 180 500 | General advertisements and trackers |
+| HaGeZi NSFW Blocklist | 126 300 | Adult content |
+| Phishing URL Blocklist | 37 800 | Phishing |
 | VNM: ABPVN List | 19 100 | Vietnamese web sites |
 | AdAway Default Blocklist | 6 500 | Advertisements in mobile applications |
-| Malicious URL Blocklist (URLHaus) | 4 800 | Malware |
+| Malicious URL Blocklist (URLHaus) | 4 700 | Malware |
 | Peter Lowe's Blocklist | 3 500 | Advertisements and trackers |
-| HaGeZi's DynDNS Blocklist | 1 500 | Dynamic DNS that malware uses |
 | AdGuard DNS Popup Hosts filter | 1 000 | Pop-up windows |
 
-The total is 952 000 rules. Of these rules, 799 000 are unique. The lists thus
+The total is 973 000 rules. Of these rules, 822 000 are unique. The lists thus
 have an overlap of 16 per cent. This overlap is not a defect. Different lists
 find different domains.
+
+NOTE: The quantity of the rules in a list changes at each build. The values in
+this guide come from a measurement on 7 September 2026. Measure your own set
+with the procedure in section 10.5. Do not use these values for a calculation
+of the memory.
 
 CAUTION: Before you add a list, test it against the names that your own
 system needs. Examine the parent domains, and not only the full names. A list
 can block `dns.quad9.net` with the rule `||quad9.net^` for the parent domain,
-and a search for the full name does not find that rule.
+and a search for the full name does not find that rule. A list can also block a
+name through its CNAME target, which no search of the lists can find. Refer to
+section 10.6.
 
 ```bash
 python3 - <<'PY'
@@ -441,6 +447,7 @@ These small lists have a low cost and a good result.
 
 | List | Rules | Function |
 | --- | --- | --- |
+| HaGeZi's DynDNS Blocklist | 1 500 | Dynamic DNS that malware uses |
 | HaGeZi's Badware Hoster Blocklist | 1 200 | Hosts that supply malware |
 | HaGeZi's Apple Tracker Blocklist | 107 | Telemetry of macOS and iOS |
 | HaGeZi's DNS Rebind Protection | 16 | DNS rebinding attacks |
@@ -501,7 +508,7 @@ https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/tif.mini.tx
 ```
 
 A larger list does not always give more duplicates. These are the measurements
-against the other lists in section 10.1.
+against the other lists in section 10.1, on 5 September 2026.
 
 | Version | Rules | Already covered | New |
 | --- | --- | --- | --- |
@@ -532,6 +539,7 @@ These are the measurements on a server with 961 MB of memory.
 | A download of 4 new lists | 695 000 | 320 MB |
 | A download of 1 new list | 843 000 | 431 MB |
 | A download of 1 new list | 968 000 | 523 MB |
+| A download of 1 new list | 973 000 | 526 MB |
 | The first download of all the 9 lists | 603 000 | 519 MB |
 
 The download of the lists costs more memory than the restart. During a
@@ -544,14 +552,21 @@ quantity of the lists that the program downloads at the same time gives the
 memory. A download of 9 lists used 519 MB. A download of 4 larger lists used
 only 320 MB. Measure the peak after you make a change. Do not calculate it.
 
-A server with 1 GB of memory operates correctly with 968 000 rules. The usual
-operation then uses 205 MB, and the largest download used 523 MB. That is
+A server with 1 GB of memory operates correctly with 973 000 rules. The usual
+operation then uses 211 MB, and the largest download used 526 MB. That is
 below the limit of 750 MB in section 10.4. Do not go above approximately
 1 000 000 rules without a new measurement.
 
-NOTE: The set in section 10.1 gives 952 000 rules and uses 147 MB. The value
-of 968 000 rules includes the list `Encrypted DNS/VPN/TOR/Proxy Bypass`, which
-section 10.2 tells you not to use.
+NOTE: If you change the address of a list in `AdGuardHome.yaml`, remove the key
+`last_updated` from that list. The program then downloads the list at the next
+start. If you do not remove that key, the program keeps the old contents until
+the interval `filters_update_interval` is complete.
+
+NOTE: The rows of this table come from different sets and different dates. The
+set in section 10.1 gave 952 000 rules in September 2026 and now gives 973 000,
+because the lists increase at each build. The value of 968 000 rules includes
+the list `Encrypted DNS/VPN/TOR/Proxy Bypass`, which section 10.2 tells you not
+to use.
 
 ### 10.4. Limit the memory of the service
 
@@ -620,6 +635,80 @@ than 0 shows that the process touched the limit.
 
 NOTE: A kernel before version 6.11 cannot set `memory.peak` to 0. To get a new
 value, restart the service. The restart makes a new cgroup.
+
+### 10.6. Find the rule that blocks a name
+
+A search of the blocklists for the name does not always find the rule. AdGuard
+Home blocks a name in three different conditions.
+
+| Condition | Example |
+| --- | --- |
+| A rule for the full name | `\|\|app-measurement.com^` blocks `app-measurement.com` |
+| A rule for a parent domain | `\|\|quad9.net^` blocks `dns.quad9.net` |
+| A rule for the CNAME target | `\|\|logging-alv.googleapis.com^` blocks `logging.googleapis.com` |
+
+The third condition is the most difficult to find. AdGuard Home sends the query
+to the upstream server and reads the answer. It then examines each name of the
+CNAME chain against the blocklists. If a name in that chain has a rule, the
+program replaces the answer with `0.0.0.0`. The blocklists do not contain the
+name that you sent. A search for that name thus gives no result.
+
+The query log gives the rule. Read the query log first. Do not search the
+blocklists first.
+
+```bash
+python3 - <<'PY'
+import json
+NAME = "logging.googleapis.com"
+for line in open("/opt/AdGuardHome/data/querylog.json"):
+    if NAME not in line:
+        continue
+    j = json.loads(line)
+    if j.get("QH") != NAME:
+        continue
+    r = j.get("Result") or {}
+    for rule in r.get("Rules") or []:
+        print(j["T"], rule.get("Text"), "list", rule.get("FilterListID"))
+PY
+```
+
+The field `Text` gives the rule. The field `FilterListID` gives the list. Find
+the name of that list in the configuration.
+
+```bash
+python3 -c 'import yaml; print([f["name"] for f in yaml.safe_load(open("/opt/AdGuardHome/AdGuardHome.yaml"))["filters"] if f["id"] == <ID>])'
+```
+
+To permit the name, write an allow rule for the name that the field `Text`
+gives. Do not write the rule for the name that you sent. In the administration
+interface, select **Filters**, then **Custom filtering rules**.
+
+```
+@@||logging-alv.googleapis.com^
+```
+
+Then test the full chain. The answer must show the CNAME and an address.
+
+```bash
+dig +short @<tailnet-ip> logging.googleapis.com
+# logging-alv.googleapis.com.
+# 216.239.34.174
+```
+
+These names of the set in section 10.1 are blocked through a CNAME target.
+
+| Name that you send | Rule that blocks it | Service |
+| --- | --- | --- |
+| `logging.googleapis.com` | `\|\|logging-alv.googleapis.com^` | Google Cloud Logging |
+| `http-intake.logs.us5.datadoghq.com` | `\|\|logs.us5.datadoghq.com^` | Datadog |
+| `bam.nr-data.net` | `\|\|nr-data.net^` | New Relic |
+| `a.nel.cloudflare.com` | `\|\|nel.cloudflare.com^` | Network Error Logging |
+
+Permit only the services that you use. The other names are telemetry.
+
+NOTE: In the query log, the value 3 of the field `Reason` is a blocklist. The
+value 0 is no filter. If the program blocks a name but gives no rule and no
+list, the cause is SafeSearch or a rewrite. Refer to section 11.1.
 
 ## 11. Configure the protections
 
