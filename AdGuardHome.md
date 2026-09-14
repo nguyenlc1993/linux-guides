@@ -377,6 +377,40 @@ Open the administration console of Tailscale.
 Select **DNS**. Then add the tailnet address of the server as a name server.
 Then enable **Override local DNS**.
 
+Then edit the name server. Select the three dots adjacent to the name server,
+then enable **Use with exit node**, and select **Save**.
+
+WARNING: Enable **Use with exit node**. This setting is disabled by default.
+If it is disabled, a device that uses an exit node does not send its queries
+to your server. The device sends all the queries to the exit node, and the exit
+node uses its own resolver. The queries thus go around the filter. The command
+`tailscale dns status` on the device continues to show your server as the
+resolver, and this condition is thus difficult to find.
+
+To make sure that the setting operates, select an exit node on a device. Then
+send a query for a blocked name. Use a random subdomain, so that no cache
+gives the answer.
+
+```bash
+dig +short @100.100.100.100 test$RANDOM.doubleclick.net   # must be 0.0.0.0
+```
+
+On the server, the query must arrive on the interface `tailscale0`. If the
+query goes out on `eth0` to a public resolver, the setting is disabled.
+
+```bash
+tcpdump -ni any port 53
+```
+
+NOTE: The setting applies to all the exit nodes of the tailnet. With a
+different exit node, the server resolves the names from its own location, but
+the traffic leaves from the exit node. A CDN can then select a server that is
+not the nearest.
+
+NOTE: Do not set the resolver of the server itself to AdGuard Home. `tailscaled`
+and the certificate renewal then need AdGuard Home, but AdGuard Home starts
+only after the tailnet address is available. The server can then fail at boot.
+
 CAUTION: Use only one name server. Tailscale sends the queries to all the
 name servers in the list. A second name server therefore decreases the
 quantity of the filtered queries.
@@ -980,6 +1014,9 @@ console.
 
 Then make sure that there is only one name server in the list.
 If there are two name servers, some queries do not use your server.
+
+If the filter stops only when a device uses an exit node, enable
+**Use with exit node** on the name server. Refer to section 9.
 
 ### 14.4. You cannot open the administration interface
 
