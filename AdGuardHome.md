@@ -22,6 +22,7 @@ Replace these values with your own values.
 | --- | --- |
 | Tailnet IPv4 address of the server | `100.x.y.z` |
 | Administration port | `3000` |
+| MagicDNS name of the tailnet | `<tailnet>.ts.net` |
 
 ### 1.2. Why AdGuard Home and not Pi-hole
 
@@ -166,6 +167,80 @@ ss -tulnp | grep AdGuard
 
 The output must show only the tailnet address.
 If the output shows `0.0.0.0` or `*`, the configuration is incorrect.
+
+### 5.1. Open the interface with a name
+
+The address `http://100.x.y.z:3000` has no name and no encryption. A Tailscale
+Service gives the interface a name and a certificate.
+
+```
+https://adguard-home.<tailnet>.ts.net
+```
+
+Do not use a hosts file or a DNS rewrite for this function. A DNS record cannot
+contain a port. A hosts file operates on only one device, and iOS has no hosts
+file. A Tailscale Service does not have these problems. Also, it does not need
+AdGuard Home to find the name.
+
+The server must have a tag, for example `tag:relay`. HTTPS certificates must be
+enabled on the **DNS** page of the administration console.
+
+1. In the administration console, select **Services**, then **Define a
+   Service**. Set the name to `adguard-home` and the endpoint to `tcp:443`.
+
+2. In **Access controls**, add a grant and an auto-approver. If the policy
+   already has the keys `grants` and `autoApprovers`, add the entries in them.
+
+   ```json
+   "grants": [
+     {
+       "src": ["autogroup:member"],
+       "dst": ["svc:adguard-home"],
+       "ip":  ["tcp:443"]
+     }
+   ],
+   "autoApprovers": {
+     "services": {
+       "svc:adguard-home": ["tag:relay"]
+     }
+   }
+   ```
+
+   CAUTION: The name in `autoApprovers` must be the same as the name of the
+   service. If you change the name of the service, change it here also. If the
+   names are different, the server does not get approval. The connection then
+   stops with a time-out, and no error shows.
+
+3. On the server, start the proxy.
+
+   ```bash
+   tailscale serve --service=svc:adguard-home --https=443 http://100.x.y.z:3000
+   ```
+
+   If the output shows `approval from an admin is required`, the auto-approver
+   did not operate. Select **Services** in the administration console, and
+   approve the server.
+
+4. Test from a client.
+
+   ```bash
+   tailscale service list
+   curl -sS -o /dev/null -w '%{http_code}\n' https://adguard-home.<tailnet>.ts.net/
+   ```
+
+   The list must show `adguard-home` with its own address. The request must
+   give `302`, which is the redirect to the login page.
+
+NOTE: The service has its own tailnet address. It thus does not interfere with
+a program that listens on port 443 of the server, for example `derper`.
+
+NOTE: Keep the web address `100.x.y.z:3000`. The proxy sends the requests to
+that address. The configuration of the proxy stays after a restart. To remove
+it, use this command.
+
+```bash
+tailscale serve clear svc:adguard-home
+```
 
 ## 6. Encrypt the upstream queries
 
@@ -1023,7 +1098,9 @@ If the filter stops only when a device uses an exit node, enable
 The interface listens only on the tailnet address.
 Connect the client to the tailnet first.
 
-Then open `http://100.x.y.z:3000`.
+Then open `https://adguard-home.<tailnet>.ts.net`. Refer to section 5.1.
+If that address gives a time-out, the server does not have approval for the
+service. Or open `http://100.x.y.z:3000` directly.
 
 If you do not have the password, refer to section 8.
 
