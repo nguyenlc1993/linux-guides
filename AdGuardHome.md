@@ -185,6 +185,12 @@ AdGuard Home to find the name.
 The server must have a tag, for example `tag:relay`. HTTPS certificates must be
 enabled on the **DNS** page of the administration console.
 
+NOTE: The server can have more than one tag. Add the tag on the **Machines**
+page of the administration console, with **Edit tags**. That page does not ask
+for an authentication a second time. The command `tailscale up` asks for it, and
+the authentication can stop the connection that you use. The tag must be in the
+key `tagOwners` of the policy before you add it to the server.
+
 1. In the administration console, select **Services**, then **Define a
    Service**. Set the name to `adguard-home` and the endpoint to `tcp:443`.
 
@@ -230,6 +236,19 @@ enabled on the **DNS** page of the administration console.
 
    The list must show `adguard-home` with its own address. The request must
    give `302`, which is the redirect to the login page.
+
+CAUTION: If you change the tags of the server later, the tailnet removes the
+approval of the server for the service. The auto-approver does not operate a
+second time. The service then stops with a time-out again. Approve the server
+again on the **Services** page after each change of the tags.
+
+To see if the server has the approval, read the addresses of the server in the
+network map. The address of the service must be in the list.
+
+```bash
+tailscale debug netmap | \
+  python3 -c 'import json,sys; print(json.load(sys.stdin)["SelfNode"]["AllowedIPs"])'
+```
 
 NOTE: The service has its own tailnet address. It thus does not interfere with
 a program that listens on port 443 of the server, for example `derper`.
